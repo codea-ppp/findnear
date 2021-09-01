@@ -19,6 +19,8 @@ public:
 	{
 	}
 
+	virtual ~spreadable() {  }
+
 	// set this as father
 	virtual container<std::unique_ptr<T>> spread() const = 0;
 	

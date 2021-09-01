@@ -53,9 +53,8 @@ private:
 
 	void make_absolute(const std::string&);
 	void make_absolute(const char*);
-
+	
 	// must after make_absolute. /bar/../bar -> /bar
-	void compact_dirpath();
 	void compact_path(std::string&) const;
 
 private:

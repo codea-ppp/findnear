@@ -209,7 +209,17 @@ void directionary_virus::make_absolute(const char* path_in)
 	if (path_in[0] == '/')
 	{
 		_dirpath.assign(path_in);
-		compact_dirpath(); 
+		compact_path(_dirpath);
+		return;
+	}
+	else if (path_in[0] == '~' && (path_in[1] == '\0' || path_in[1] == '/'))
+	{
+		// ~/ or ~
+		_dirpath.assign(getenv("HOME"));
+		if (path_in[1] == '/')
+			_dirpath.append("/").append(path_in + 2);
+
+		compact_path(_dirpath);
 		return;
 	}
 
@@ -220,44 +230,40 @@ void directionary_virus::make_absolute(const char* path_in)
 	_dirpath.assign(path_abs).append("/").append(path_in);
 	free(path_abs);
 
-	compact_dirpath(); // _dirpath is key to check father
-}
-
-void directionary_virus::compact_dirpath()
-{
-	compact_path(_dirpath);
+	compact_path(_dirpath); // _dirpath is key to check father
 }
 
 void directionary_virus::compact_path(std::string& relative_path) const
 {
-	std::string::size_type head_slash = std::string::npos;
 	std::string::size_type tail_slash = 0;
+	std::string::size_type head_slash = relative_path.find("/", tail_slash + 1);
 
-	std::string accu;
 	std::string temp;
+	std::string accu;
 
-	for (
-			head_slash = relative_path.find("/", tail_slash + 1); 
-			head_slash != std::string::npos; 
-			tail_slash = head_slash
-	) {
-		head_slash = relative_path.find("/", tail_slash + 1);
+	auto temp_update = [&]() {
+		if (head_slash != std::string::npos)
+			temp = relative_path.substr(tail_slash, head_slash - tail_slash);
+		else 
+			temp = relative_path.substr(tail_slash);
+	};
 
-		if (head_slash - tail_slash <= 1)
-			continue;
-
-		temp = relative_path.substr(tail_slash, head_slash - tail_slash);
+	while (true)
+	{
+		temp_update();
 		
-		if (temp == "/.")
-			continue;
-
-		if (temp == "/..")
-		{
+		if (head_slash - tail_slash == 1) { /* such ./bar//foo*/ }
+		else if (temp == "/.") { }
+		else if (temp == "/..")
 			accu = accu.substr(0, accu.rfind("/", tail_slash - 1));
-			continue;
-		}
+		else
+			accu.append(temp);
 
-		accu.append(temp);
+		if (head_slash == std::string::npos)
+			break;
+
+		tail_slash = head_slash;
+		head_slash = relative_path.find("/", tail_slash + 1);
 	}
 
 	std::swap(accu, relative_path);
