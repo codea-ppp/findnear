@@ -4,6 +4,7 @@
 #include <bits/stdc++.h>
 #include <errno.h>
 
+#include <memory>
 #include <sys/stat.h>
 #include <dirent.h>
 #include <unistd.h>
@@ -13,7 +14,7 @@
 
 namespace stupid
 {
-
+	
 class directionary_virus : public spreadable<directionary_virus>
 {
 	directionary_virus(const directionary_virus&) = delete;
@@ -64,6 +65,8 @@ private:
 	struct dirent** _namelist;
 	int _record_count;
 };
+
+using dirptr = std::unique_ptr<directionary_virus>;
 
 };
 
