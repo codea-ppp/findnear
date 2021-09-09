@@ -1,4 +1,6 @@
 #include "src/stupid_dir.h"
+#include <exception>
+#include <system_error>
 
 namespace stupid
 {
@@ -36,7 +38,6 @@ directionary_virus::~directionary_virus()
 
 const std::string& directionary_virus::get_path() const
 {
-	assert(_namelist != nullptr);
 	return _dirpath;
 }
 
@@ -47,14 +48,11 @@ bool directionary_virus::is_open() const
 
 bool directionary_virus::find(const std::string& filename) const
 { 
-	assert(_namelist != nullptr);
 	return find(filename.c_str()); 
 }
 
 bool directionary_virus::find(const char* filename) const
 {
-	assert(_namelist != nullptr);
-
 	for (auto& i : _filelist)
 	{
 		if (!strncmp(filename, i->d_name, 256))
@@ -127,7 +125,14 @@ std::vector<std::unique_ptr<directionary_virus>> directionary_virus::spread() co
 		if (target_path == father_path)
 			continue;
 
-		accu.push_back(std::make_unique<directionary_virus>(target_path, this, get_depth() + 1));
+		try
+		{
+			accu.push_back(std::make_unique<directionary_virus>(target_path, this, get_depth() + 1));
+		}
+		catch (std::error_code err)
+		{
+			printf("%s: %s\n", target_path.c_str(), strerror(err.value()));
+		}
 	}
 
 	return accu;
@@ -135,8 +140,6 @@ std::vector<std::unique_ptr<directionary_virus>> directionary_virus::spread() co
 
 void directionary_virus::fresh_list()
 {
-	assert(_namelist == nullptr);
-
 	clear_list();
 	load_list();
 }
@@ -147,7 +150,7 @@ void directionary_virus::load_list()
 
 	_record_count = scandir(_dirpath.c_str(), &_namelist, NULL, alphasort);
 	if (_record_count == -1)
-		throw std::string(strerror(errno));
+		throw std::error_code(errno, std::generic_category());
 
 	for (int i = 0; i < _record_count; ++i)
 	{
@@ -225,7 +228,7 @@ void directionary_virus::make_absolute(const char* path_in)
 
 	char* path_abs = get_current_dir_name();
 	if (path_abs == nullptr)
-		throw std::string(strerror(errno));
+		throw std::error_code(errno, std::generic_category());
 
 	_dirpath.assign(path_abs).append("/").append(path_in);
 	free(path_abs);
