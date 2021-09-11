@@ -125,14 +125,7 @@ std::vector<std::unique_ptr<directionary_virus>> directionary_virus::spread() co
 		if (target_path == father_path)
 			continue;
 
-		try
-		{
-			accu.push_back(std::make_unique<directionary_virus>(target_path, this, get_depth() + 1));
-		}
-		catch (std::error_code err)
-		{
-			printf("%s: %s\n", target_path.c_str(), strerror(err.value()));
-		}
+		accu.push_back(std::make_unique<directionary_virus>(target_path, this, get_depth() + 1));
 	}
 
 	return accu;
@@ -150,7 +143,10 @@ void directionary_virus::load_list()
 
 	_record_count = scandir(_dirpath.c_str(), &_namelist, NULL, alphasort);
 	if (_record_count == -1)
-		throw std::error_code(errno, std::generic_category());
+	{
+		printf("%s: %s\n", _dirpath.c_str(), strerror(errno));
+		return;
+	}
 
 	for (int i = 0; i < _record_count; ++i)
 	{
@@ -228,7 +224,10 @@ void directionary_virus::make_absolute(const char* path_in)
 
 	char* path_abs = get_current_dir_name();
 	if (path_abs == nullptr)
-		throw std::error_code(errno, std::generic_category());
+	{
+		printf("%s: %s", _dirpath.c_str(), strerror(errno));
+		return;
+	}
 
 	_dirpath.assign(path_abs).append("/").append(path_in);
 	free(path_abs);

@@ -12,26 +12,19 @@ int main(int argc, char* argv[])
 		return 1;
 	}
 
+	stupid::directionary_virus root(FLAGS_root);
+	if (root.find(FLAGS_search_file))
+	{
+		printf("%s/%s", root.get_path().c_str(), FLAGS_search_file.c_str());
+		return 0;
+	}
+
 	int dirvec_curr_index = 0;
 	std::vector<std::vector<stupid::dirptr>> dirvec_slots[3];
 	std::vector<std::vector<stupid::dirptr>>* dirvec_curr = &dirvec_slots[dirvec_curr_index];
 	std::vector<std::vector<stupid::dirptr>>* dirvec_futu = &dirvec_slots[(dirvec_curr_index + 1) % 3];
 
-	try
-	{
-		stupid::directionary_virus root(FLAGS_root);
-		if (root.find(FLAGS_search_file))
-		{
-			printf("%s/%s", root.get_path().c_str(), FLAGS_search_file.c_str());
-			return 0;
-		}
-
-		dirvec_curr->push_back(root.spread());
-	}
-	catch (std::error_code err)
-	{
-		printf("%s: %s\n", FLAGS_root.c_str(), strerror(err.value()));
-	}
+	dirvec_curr->push_back(root.spread());
 
 	for (uint64_t i = 0; i < FLAGS_depth; ++i)
 	{

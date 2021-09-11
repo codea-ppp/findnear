@@ -1,7 +1,6 @@
 #ifndef STUPID_DIR_H_ 
 #define STUPID_DIR_H_
 
-#include <bits/stdc++.h>
 #include <errno.h>
 
 #include <memory>
